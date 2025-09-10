@@ -22,8 +22,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ------------------ Configuration ------------------
-APP_ROOT = Path(__file__).resolve().parent
-FRONTEND_DIR = APP_ROOT / "frontend"  # Ensure frontend is inside the repo
+from pathlib import Path
+
+APP_ROOT = Path(__file__).resolve().parent          # backend/
+FRONTEND_DIR = APP_ROOT.parent / "frontend"         # ../frontend
 DEFAULT_CIDR = os.environ.get("SUBNET_CIDR", "192.168.1.0/24")
 COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 139, 443, 993, 995, 3389]
 
