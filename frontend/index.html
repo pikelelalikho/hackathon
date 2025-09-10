@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hackathon Network Scanner</title>
+<!-- Chart.js for Line and Bar charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Leaflet.js for interactive world map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+<body>
+<header>
+    <h1>Hackathon Network Scanner</h1>
+    <div id="animatedBanner" class="animated-banner">Welcome to Kali Hackathon Network Scanner</div>
+    <nav>
+        <button data-tab="scan" class="active">Network Discovery</button>
+        <button data-tab="ports">Port Scanner</button>
+        <button data-tab="terminal">Terminal</button>
+        <button data-tab="analysis">AI Analysis</button>
+    </nav>
+</header>
+
+<main>
+<!-- Network Scan Tab -->
+<section id="scan" class="tab active">
+    <div class="section">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Network Discovery</div>
+                <div class="section-description">Scan your local network to discover connected devices</div>
+            </div>
+            <div class="section-controls">
+                <button id="btnScan" class="btn">Start Scan</button>
+                <button onclick="clearScanResults()" class="btn">Clear</button>
+            </div>
+        </div>
+        <div class="output-container">
+            <div class="table-container">
+                <table id="scanResults">
+                    <thead>
+                        <tr><th>IP Address</th><th>Hostname</th><th>Status</th><th>MAC Address</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" style="text-align:center;color:#666;padding:40px;">Click "Start Scan" to discover network devices</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Port Scanner Tab -->
+<section id="ports" class="tab">
+    <div class="section">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Port Scanner</div>
+                <div class="section-description">Scan for open ports on target devices</div>
+            </div>
+            <div class="section-controls">
+                <input type="text" id="ipPort" class="input-field" placeholder="Enter IP (e.g., 192.168.1.1)">
+                <button id="btnPorts" class="btn">Scan Ports</button>
+                <button onclick="clearPortResults()" class="btn">Clear</button>
+            </div>
+        </div>
+        <div class="output-container">
+            <div class="terminal" id="portResults">
+Ready to scan ports on target device...
+
+Usage: Enter target IP address and click "Scan Ports"
+Example: 192.168.1.1
+
+The scanner will check common ports:
+• SSH (22), Telnet (23), HTTP (80), HTTPS (443)
+• FTP (21), SMTP (25), DNS (53), POP3 (110)
+• And many more...
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Terminal Tab -->
+<section id="terminal" class="tab">
+    <div class="section">
+        <div class="section-header">
+            <div>
+                <div class="section-title">Command Terminal</div>
+                <div class="section-description">Execute network diagnostic commands</div>
+            </div>
+            <div class="section-controls">
+                <input type="text" id="terminalInput" class="input-field" placeholder="Enter command">
+                <button id="btnTerminal" class="btn">▶Execute</button>
+                <button onclick="clearTerminal()" class="btn">Clear</button>
+            </div>
+        </div>
+        <div class="output-container">
+            <div class="terminal" id="terminalOutput">
+Welcome to Kali Linux Terminal
+
+Available commands:
+• ping [host] - Test network connectivity
+• nslookup [domain] - DNS lookup
+• traceroute [host] - Trace route to destination
+• netstat - Display network connections
+• ifconfig - Show network interface configuration
+
+Type your command above and press Execute...
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Analysis Tab -->
+<section id="analysis" class="tab">
+    <div class="section">
+        <div class="section-header">
+            <div>
+                <div class="section-title">AI Network Analysis</div>
+                <div class="section-description">Intelligent network security and topology analysis</div>
+            </div>
+            <div class="section-controls">
+                <button id="btnAnalyze" class="btn">Analyze Network</button>
+                <button onclick="clearAnalysis()" class="btn">Clear</button>
+            </div>
+        </div>
+        <div class="output-container">
+            <div class="terminal" id="analysisOutput">
+AI Network Analysis Engine Ready
+
+Click "Analyze Network" to start comprehensive analysis...
+            </div>
+            <div id="chartsContainer">
+                <div class="chart-box">
+                    <canvas id="lineChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="barChart"></canvas>
+                </div>
+                <div id="worldMap"></div>
+            </div>
+        </div>
+    </div>
+</section>
+</main>
+
+
+<script src="script.js"></script>
+</body>
+</html>
