@@ -1,5 +1,5 @@
 # app.py
-# Full Backend for Local Network Scanner Web App
+# Full Backend for Local Network Scanner Web App (Render-ready)
 
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
@@ -22,9 +22,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ------------------ Configuration ------------------
-ALLOWED_IPS = ["127.0.0.1", "192.168.1.0/24"]
 APP_ROOT = Path(__file__).resolve().parent
-FRONTEND_DIR = APP_ROOT.parent / "frontend"
+FRONTEND_DIR = APP_ROOT / "frontend"  # Ensure frontend is inside the repo
 DEFAULT_CIDR = os.environ.get("SUBNET_CIDR", "192.168.1.0/24")
 COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 139, 443, 993, 995, 3389]
 
@@ -32,40 +31,21 @@ COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 139, 443, 993, 995, 3389]
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-def is_ip_allowed(remote_addr: str) -> bool:
-    """Check if the request IP is allowed"""
-    try:
-        ip = ipaddress.ip_address(remote_addr)
-        for allowed in ALLOWED_IPS:
-            if "/" in allowed:
-                network = ipaddress.ip_network(allowed, strict=False)
-                if ip in network:
-                    return True
-            else:
-                if str(ip) == allowed:
-                    return True
-        return False
-    except ValueError:
-        return False
-
-@app.before_request
-def check_ip_whitelist():
-    if not is_ip_allowed(request.remote_addr):
-        return jsonify({"ok": False, "error": "Access denied"}), 403
-
 # ------------------ GPT Analysis ------------------
 try:
     from improved_gpt_agent import summarize_devices
 except ImportError:
     def summarize_devices(devices):
-        return f"Basic Analysis: Found {len(devices)} devices. {len([d for d in devices if d.get('status') == 'Online'])} online, {len([d for d in devices if d.get('status') == 'Offline'])} offline."
+        online_count = len([d for d in devices if d.get('status') == 'Online'])
+        offline_count = len([d for d in devices if d.get('status') == 'Offline'])
+        return f"Basic Analysis: Found {len(devices)} devices. {online_count} online, {offline_count} offline."
 
 # ------------------ Network Scanner ------------------
 class NetworkScanner:
     def __init__(self):
         self.is_windows = platform.system().lower().startswith("win")
 
-    def ping_host(self, ip: str, timeout_ms: int = 800) -> bool:
+    def ping_host(self, ip: str, timeout_ms: int = 1200) -> bool:
         try:
             if self.is_windows:
                 cmd = ["ping", "-n", "1", "-w", str(timeout_ms), ip]
@@ -100,7 +80,7 @@ class NetworkScanner:
                 return None
             return None
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(50, len(ports))) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(20, len(ports))) as executor:
             future_to_port = {executor.submit(check_port, port): port for port in ports}
             for future in concurrent.futures.as_completed(future_to_port):
                 port = future.result()
@@ -120,14 +100,14 @@ class NetworkScanner:
             net = ipaddress.ip_network(DEFAULT_CIDR, strict=False)
             return [str(ip) for ip in list(net.hosts())[:254]]
 
-    def scan_network(self, cidr: str, limit: int = 0, timeout_ms: int = 800) -> Dict[str, Any]:
+    def scan_network(self, cidr: str, limit: int = 0, timeout_ms: int = 1200) -> Dict[str, Any]:
         start_time = time.time()
         hosts = self.get_network_hosts(cidr)
         if limit > 0:
             hosts = hosts[:limit]
 
         results = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(64, len(hosts))) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(20, len(hosts))) as executor:
             future_to_ip = {executor.submit(self.ping_host, ip, timeout_ms): ip for ip in hosts}
             for future in concurrent.futures.as_completed(future_to_ip):
                 ip = future_to_ip[future]
@@ -257,7 +237,7 @@ def serve_frontend():
 def api_scan():
     cidr = request.args.get("cidr", DEFAULT_CIDR)
     limit = min(int(request.args.get("limit", "0") or 0), 1024)
-    timeout_ms = int(request.args.get("timeout_ms", "800"))
+    timeout_ms = int(request.args.get("timeout_ms", "1200"))
     try:
         return jsonify(scanner.scan_network(cidr, limit, timeout_ms))
     except Exception as e:
@@ -323,18 +303,6 @@ def api_status():
         "common_ports": COMMON_PORTS
     })
 
-@app.route("/api/chart_image")
-def api_chart_image():
-    data = [10, 5]  # Example: online vs offline
-    labels = ["Online", "Offline"]
-    fig, ax = plt.subplots()
-    ax.bar(labels, data, color=['green', 'red'])
-    
-    buf = BytesIO()
-    fig.savefig(buf, format='png')
-    buf.seek(0)
-    return send_file(buf, mimetype='image/png')
-
 @app.route("/<path:filename>")
 def serve_static(filename):
     try:
@@ -355,18 +323,10 @@ def not_found(error):
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
-@app.errorhandler(403)
-def forbidden(error):
-    return jsonify({"error": "Access forbidden"}), 403
-
 # ------------------ Main ------------------
 if __name__ == "__main__":
-    print(f"Starting Network Scanner API v2.0")
+    port = int(os.environ.get("PORT", 5000))
+    print(f"Starting Network Scanner API v2.0 on port {port}")
     print(f"Platform: {platform.system()}")
-    print(f"Default CIDR: {DEFAULT_CIDR}")
     print(f"Frontend directory: {FRONTEND_DIR}")
-    print(f"Allowed IPs: {ALLOWED_IPS}")
-    
-    FRONTEND_DIR.mkdir(exist_ok=True)
-    
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=port)
