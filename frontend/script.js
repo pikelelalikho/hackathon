@@ -1,5 +1,5 @@
 // --------------------- CONFIG ---------------------
-const BACKEND_URL = 'https://network-analyzer.onrender.com'; // <-- replace with your Render URL
+const BACKEND_URL = 'https://hackathon-etsh.onrender.com'; // <-- replace with your Render URL
 
 // --------------------- TAB SWITCHING ---------------------
 document.querySelectorAll('nav button').forEach(btn => {
