@@ -1,3 +1,6 @@
+// --------------------- CONFIG ---------------------
+const BACKEND_URL = 'https://network-analyzer.onrender.com'; // <-- replace with your Render URL
+
 // --------------------- TAB SWITCHING ---------------------
 document.querySelectorAll('nav button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -19,7 +22,7 @@ document.getElementById('btnScan').addEventListener('click', async () => {
     btn.textContent = ' Scanning...';
 
     try {
-        const res = await fetch('/api/scan');
+        const res = await fetch(`${BACKEND_URL}/api/scan`);
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const data = await res.json();
 
@@ -58,7 +61,7 @@ document.getElementById('btnPorts').addEventListener('click', async () => {
     output.innerHTML = `Starting port scan on ${ip}...\n\n`;
 
     try {
-        const res = await fetch(`/api/ports/${ip}`);
+        const res = await fetch(`${BACKEND_URL}/api/ports/${ip}`);
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const data = await res.json();
 
@@ -81,7 +84,7 @@ document.getElementById('btnTerminal').addEventListener('click', async () => {
     output.innerHTML += `\n$ ${cmd}\n`;
 
     try {
-        const res = await fetch(`/api/terminal`, {
+        const res = await fetch(`${BACKEND_URL}/api/terminal`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ command: cmd })
@@ -89,11 +92,7 @@ document.getElementById('btnTerminal').addEventListener('click', async () => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         const data = await res.json();
 
-        if (data.success) {
-            output.innerHTML += (data.output || 'No output') + '\n';
-        } else {
-            output.innerHTML += `Error: ${data.output || 'Unknown error'}\n`;
-        }
+        output.innerHTML += data.success ? (data.output || 'No output') + '\n' : `Error: ${data.output || 'Unknown error'}\n`;
     } catch (error) {
         output.innerHTML += `ERROR: ${error.message}\n`;
     }
@@ -108,7 +107,7 @@ document.getElementById('btnAnalyze').addEventListener('click', async () => {
     output.innerHTML += '\nAnalyzing network...\nPlease wait...\n';
 
     try {
-        const res = await fetch('/api/analyze', {
+        const res = await fetch(`${BACKEND_URL}/api/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ devices: scannedDevices })
@@ -132,28 +131,14 @@ const lineCtx = document.getElementById('lineChart').getContext('2d');
 const lineChart = new Chart(lineCtx, {
     type: 'line',
     data: { labels: [], datasets: [{ label: 'Network Traffic (MB)', data: [], borderColor:'#ff0000', backgroundColor:'rgba(255,0,0,0.1)', tension:0.3, fill:true }] },
-    options: {
-        responsive: true,
-        plugins: { legend: { labels: { color:'#00ff00' } } },
-        scales: {
-            x: { ticks: { color:'#00ff00' }, grid: { color:'#111' } },
-            y: { ticks: { color:'#00ff00' }, grid: { color:'#111' } }
-        }
-    }
+    options: { responsive: true, plugins: { legend: { labels: { color:'#00ff00' } } }, scales: { x: { ticks: { color:'#00ff00' }, grid: { color:'#111' } }, y: { ticks: { color:'#00ff00' }, grid: { color:'#111' } } } }
 });
 
 const barCtx = document.getElementById('barChart').getContext('2d');
 const barChart = new Chart(barCtx, {
     type: 'bar',
     data: { labels: [], datasets: [{ label:'Open Ports', data:[], backgroundColor:'#ff0000' }] },
-    options: {
-        responsive: true,
-        plugins: { legend: { labels: { color:'#00ff00' } } },
-        scales: {
-            x: { ticks: { color:'#00ff00' }, grid: { color:'#111' } },
-            y: { ticks: { color:'#00ff00' }, grid: { color:'#111' } }
-        }
-    }
+    options: { responsive: true, plugins: { legend: { labels: { color:'#00ff00' } } }, scales: { x: { ticks: { color:'#00ff00' }, grid: { color:'#111' } }, y: { ticks: { color:'#00ff00' }, grid: { color:'#111' } } } }
 });
 
 // --------------------- LEAFLET MAP ---------------------
